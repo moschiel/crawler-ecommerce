@@ -25,7 +25,9 @@ def getPagesPerTab(TabUrls):
         #read last character
         char_tab = url[-1:] if url[-1:] != "0" else "#" 
         try:
-            sleep(0.5)
+            sleep(0.5) #delay pra evitar detecção de requests massivos
+            #intercala entre a url da home e a url que queremos, para assim burlar a detecção de repetição de rotas
+            requests.get("https://www.americanas.com.br", headers=c.HEADERS)
             page = requests.get(url, headers=c.HEADERS)
             if(page.status_code != 200):
                 print("ERRO NA LEITURA DE PAGINAS DA ABA '" + char_tab + "', STATUS CODE: " + str(page.status_code))
@@ -62,8 +64,11 @@ def getSellersPerTab(urlsPerPagePerTab):
         StatudCodeFail = False
         for pageUrl in pagesUrls:
             try:
-                sleep(0.5)
+                sleep(0.5) #delay pra evitar detecção de requests massivos
+                #intercala entre a url da home e a url que queremos, para assim burlar a detecção de repetição de rotas
+                requests.get("https://www.americanas.com.br", headers=c.HEADERS)
                 page = requests.get(pageUrl, headers=c.HEADERS)
+
                 if(page.status_code != 200):
                     #print("ERRO NA LEITURA DOS SELLERS DA ABA '" + char_tab + "', PAGINA " + pageUrl[-1:] + ", STATUS CODE: " + str(page.status_code))
                     StatudCodeFail = True
@@ -90,8 +95,8 @@ def getSellersPerTab(urlsPerPagePerTab):
 
 
 
-start_tab = 1
-count = 2
+start_tab = 0
+count = c.MAX_ABAS
 tabUrls = setTabUrls(start_tab, count)
 pagesPerTabUrls = getPagesPerTab(tabUrls)
 getSellersPerTab(pagesPerTabUrls)
