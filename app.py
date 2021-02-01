@@ -4,7 +4,8 @@ import constants as c
 import lxml.html as parser
 import requests
 from time import sleep
-
+import file_manager as f
+import json
 
 def setTabUrls(startTab=0, count=0):
     print("SETANDO URLs DE CADA ABA")
@@ -46,6 +47,7 @@ def getPagesPerTab(TabUrls):
                 if c.PRINT_PAGE_URL:
                     print(page_urls[i])
            
+            f.save_text_file("pages_tab", "pages_tab_" + char_tab + ".json", json.dumps(page_urls))
             pages_per_tab.append(page_urls)
         except:
             print("ERRO NA LEITURA DE PAGINAS DA ABA '" + char_tab + "'")
@@ -95,8 +97,13 @@ def getSellersPerTab(urlsPerPagePerTab):
 
 
 
-start_tab = 0
-count = c.MAX_ABAS
-tabUrls = setTabUrls(start_tab, count)
-pagesPerTabUrls = getPagesPerTab(tabUrls)
-getSellersPerTab(pagesPerTabUrls)
+def main():
+    start_tab = 0
+    count = 1 #c.MAX_ABAS
+    tabUrls = setTabUrls(start_tab, count)
+    pagesPerTabUrls = getPagesPerTab(tabUrls)
+    #getSellersPerTab(pagesPerTabUrls)
+
+
+if __name__ == '__main__':
+    main()
