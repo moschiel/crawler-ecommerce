@@ -26,28 +26,33 @@ def getPagesPerTab(TabUrls):
         #read last character
         char_tab = url[-1:] if url[-1:] != "0" else "#" 
         try:
-            sleep(0.5) #delay pra evitar detecção de requests massivos
-            #intercala entre a url da home e a url que queremos, para assim burlar a detecção de repetição de rotas
-            requests.get("https://www.americanas.com.br", headers=c.HEADERS)
-            page = requests.get(url, headers=c.HEADERS)
-            if(page.status_code != 200):
-                print("ERRO NA LEITURA DE PAGINAS DA ABA '" + char_tab + "', STATUS CODE: " + str(page.status_code))
-                continue
+            page_urls = f.read_file("pages_tab", "pages_tab_" + char_tab + ".json")
+            if(page_urls != False):
+                page_urls = json.loads(page_urls)
+                print("carregado arquivo com " + str(len(page_urls)) + " urls de pagina da aba '" + char_tab + "'") 
+            else:
+                sleep(0.5) #delay pra evitar detecção de requests massivos
+                #intercala entre a url da home e a url que queremos, para assim burlar a detecção de repetição de rotas
+                requests.get("https://www.americanas.com.br", headers=c.HEADERS)
+                page = requests.get(url, headers=c.HEADERS)
+                if(page.status_code != 200):
+                    print("ERRO NA LEITURA DE PAGINAS DA ABA '" + char_tab + "', STATUS CODE: " + str(page.status_code))
+                    continue
 
-            tree = parser.fromstring(page.content)
-            page_urls = tree.xpath('//*[@id="summary-pane-'+ char_tab +'"]/div/div/div/div/ul/li/a/@href')
-            page_urls = u.RemoveDuplicates(page_urls) 
-            page_urls = u.RemoveIfContain(page_urls, "#")
-            print("coletado " + str(len(page_urls)) + " urls de pagina da aba '" + char_tab + "'")  
+                tree = parser.fromstring(page.content)
+                page_urls = tree.xpath('//*[@id="summary-pane-'+ char_tab +'"]/div/div/div/div/ul/li/a/@href')
+                page_urls = u.RemoveDuplicates(page_urls) 
+                page_urls = u.RemoveIfContain(page_urls, "#")
+                print("salvo arquivo com " + str(len(page_urls)) + " urls de pagina da aba '" + char_tab + "'")  
             
-            for i in range(len(page_urls)):
-                if(("pagina" not in page_urls[i]) and ("letra" in page_urls[i])):
-                    page_urls[i] += "/pagina-1"
-                page_urls[i] = "https://www.americanas.com.br" + page_urls[i]
-                if c.PRINT_PAGE_URL:
-                    print(page_urls[i])
-           
-            f.save_text_file("pages_tab", "pages_tab_" + char_tab + ".json", json.dumps(page_urls))
+                for i in range(len(page_urls)):
+                    if(("pagina" not in page_urls[i]) and ("letra" in page_urls[i])):
+                        page_urls[i] += "/pagina-1"
+                    page_urls[i] = "https://www.americanas.com.br" + page_urls[i]
+                    if c.PRINT_PAGE_URL:
+                        print(page_urls[i])
+                f.save_file("pages_tab", "pages_tab_" + char_tab + ".json", json.dumps(page_urls))
+
             pages_per_tab.append(page_urls)
         except:
             print("ERRO NA LEITURA DE PAGINAS DA ABA '" + char_tab + "'")
@@ -99,7 +104,7 @@ def getSellersPerTab(urlsPerPagePerTab):
 
 def main():
     start_tab = 0
-    count = 1 #c.MAX_ABAS
+    count = c.MAX_ABAS
     tabUrls = setTabUrls(start_tab, count)
     pagesPerTabUrls = getPagesPerTab(tabUrls)
     #getSellersPerTab(pagesPerTabUrls)
