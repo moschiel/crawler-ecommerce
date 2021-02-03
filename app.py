@@ -108,12 +108,16 @@ def getSellersPerTab(urlsPerPagePerTab):
     print("TOTAL DE URLS DE SELLERS: " + str(totalSellers))
     u.endline()
 
+def getSellersDataPerTab(sellersPerTabUrls):
+    return
+
 def main():
     start_tab = 0
-    count = c.MAX_ABAS
+    count = 1 #c.MAX_ABAS
     tabUrls = setTabUrls(start_tab, count)
     pagesPerTabUrls = getPagesPerTab(tabUrls)
-    getSellersPerTab(pagesPerTabUrls)
+    sellersPerTabUrls = getSellersPerTab(pagesPerTabUrls)
+    getSellersDataPerTab(sellersPerTabUrls)
 
 
 if __name__ == '__main__':
