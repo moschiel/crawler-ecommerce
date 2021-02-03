@@ -47,7 +47,7 @@ def getPagesPerTab(TabUrls):
                 for i in range(len(page_urls)):
                     if(("pagina" not in page_urls[i]) and ("letra" in page_urls[i])):
                         page_urls[i] += "/pagina-1"
-                    page_urls[i] = "https://www.americanas.com.br" + page_urls[i]
+                    page_urls[i] = page_urls[i][30:] # armazena apenas o conteudo depois da string 'letra-'
                     if c.PRINT_PAGE_URL:
                         print(page_urls[i])
                 f.save_file("url_pages_tab", "url_pages_tab_" + char_tab + ".json", json.dumps(page_urls))
@@ -64,8 +64,7 @@ def getSellersPerTab(urlsPerPagePerTab):
     sellersUrls = []
     totalSellers = 0
     for pagesUrls in urlsPerPagePerTab:
-        char_pos = pagesUrls[0].index('letra-') + len('letra-')
-        char_tab = pagesUrls[0][char_pos] if pagesUrls[0][char_pos] != "0" else "#"
+        char_tab = pagesUrls[0][0] if pagesUrls[0][0] != "0" else "#"
         sellersUrlsCollected = f.read_file("url_sellers", "url_sellers_tab_" + char_tab + ".json")
 
         if(sellersUrlsCollected != False):
@@ -79,7 +78,7 @@ def getSellersPerTab(urlsPerPagePerTab):
                     sleep(0.5) #delay pra evitar detecção de requests massivos
                     #intercala entre a url da home e a url que queremos, para assim burlar a detecção de repetição de rotas
                     requests.get("https://www.americanas.com.br", headers=c.HEADERS)
-                    page = requests.get(pageUrl, headers=c.HEADERS)
+                    page = requests.get("https://www.americanas.com.br/mapa-do-site/lojista/f/letra-" + pageUrl, headers=c.HEADERS)
 
                     if(page.status_code != 200):
                         StatudCodeFail = True
@@ -95,9 +94,11 @@ def getSellersPerTab(urlsPerPagePerTab):
             sellersUrlsCollected = u.RemoveDuplicates(sellersUrlsCollected) 
             #algumas urls falsas geralmente tem a substring '-teste'
             sellersUrlsCollected = u.RemoveIfContain(sellersUrlsCollected, '-teste') 
-            if c.PRINT_SELLERS_URL:
-                for url in sellersUrlsCollected:
-                    print(url)
+            
+            for i in range(len(sellersUrlsCollected)):
+                sellersUrlsCollected[i] = sellersUrlsCollected[i][9:] # armazena apenas o conteudo depois da string '/lojista/'
+                if c.PRINT_SELLERS_URL:
+                    print(sellersUrlsCollected[i])
 
             f.save_file("url_sellers", "url_sellers_tab_" + char_tab + ".json", json.dumps(sellersUrlsCollected))
             print("salvo " + str(len(sellersUrlsCollected)) + " urls de sellers da aba '" + char_tab + "' - COMPLETE:" + str(not StatudCodeFail))
@@ -117,7 +118,7 @@ def main():
     tabUrls = setTabUrls(start_tab, count)
     pagesPerTabUrls = getPagesPerTab(tabUrls)
     sellersPerTabUrls = getSellersPerTab(pagesPerTabUrls)
-    getSellersDataPerTab(sellersPerTabUrls)
+    #getSellersDataPerTab(sellersPerTabUrls)
 
 
 if __name__ == '__main__':
