@@ -101,12 +101,12 @@ def getSellersPerTab(urlsPerPagePerTab):
 
             f.save_file("url_sellers", "url_sellers_tab_" + char_tab + ".json", json.dumps(sellersUrlsCollected))
             print("salvo " + str(len(sellersUrlsCollected)) + " urls de sellers da aba '" + char_tab + "' - COMPLETE:" + str(not StatudCodeFail))
-            
+        
+        totalSellers += len(sellersUrlsCollected)
+        sellersUrls.append(sellersUrlsCollected)
     u.endline()
     print("TOTAL DE URLS DE SELLERS: " + str(totalSellers))
     u.endline()
-
-
 
 def main():
     start_tab = 0
