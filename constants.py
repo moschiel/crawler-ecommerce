@@ -2,6 +2,7 @@ MAX_ABAS = 27
 PRINT_ABA_URL = True
 PRINT_PAGE_URL = False
 PRINT_SELLERS_URL = False
+REQUEST_INTERVAL = 2 #seconds
 
 HEADERS = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.104 Safari/537.36', 

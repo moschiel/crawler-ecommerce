@@ -31,9 +31,7 @@ def getPagesPerTab(TabUrls):
                 page_urls = json.loads(page_urls)
                 print("carregado " + str(len(page_urls)) + " urls de pagina da aba '" + char_tab + "'") 
             else:
-                sleep(0.5) #delay pra evitar detecção de requests massivos
-                #intercala entre a url da home e a url que queremos, para assim burlar a detecção de repetição de rotas
-                requests.get("https://www.americanas.com.br", headers=c.HEADERS)
+                sleep(c.REQUEST_INTERVAL) #delay pra evitar detecção de requests massivos, o que causaria error 403
                 page = requests.get(url, headers=c.HEADERS)
                 if(page.status_code != 200):
                     print("ERRO NA LEITURA DE PAGINAS DA ABA '" + char_tab + "', STATUS CODE: " + str(page.status_code))
@@ -75,9 +73,7 @@ def getSellersPerTab(urlsPerPagePerTab):
             StatudCodeFail = False
             for pageUrl in pagesUrls:
                 try:
-                    sleep(0.5) #delay pra evitar detecção de requests massivos
-                    #intercala entre a url da home e a url que queremos, para assim burlar a detecção de repetição de rotas
-                    requests.get("https://www.americanas.com.br", headers=c.HEADERS)
+                    sleep(c.REQUEST_INTERVAL) #delay pra evitar detecção de requests massivos, o que causaria error 403
                     page = requests.get("https://www.americanas.com.br/mapa-do-site/lojista/f/letra-" + pageUrl, headers=c.HEADERS)
 
                     if(page.status_code != 200):
@@ -109,12 +105,25 @@ def getSellersPerTab(urlsPerPagePerTab):
     print("TOTAL DE URLS DE SELLERS: " + str(totalSellers))
     u.endline()
 
+
 def getSellersDataPerTab(sellersPerTabUrls):
+    print ("COLETANDO DADOS DOS SELLERS DE CADA ABA")
+    for sellersUrls in sellersPerTabUrls:
+        Sellers = []
+        for sellerUrl in sellersUrls:
+            try:
+                sleep(c.REQUEST_INTERVAL) #delay pra evitar detecção de requests massivos, o que causaria error 403
+                page = requests.get(sellerUrl, headers=c.HEADERS) 
+                tree = parser.fromstring(page.content)
+            except:
+                print("BLA")
+            #seller = Seller()
+            #Sellers.append( )
     return
 
 def main():
     start_tab = 0
-    count = 1 #c.MAX_ABAS
+    count = c.MAX_ABAS
     tabUrls = setTabUrls(start_tab, count)
     pagesPerTabUrls = getPagesPerTab(tabUrls)
     sellersPerTabUrls = getSellersPerTab(pagesPerTabUrls)
