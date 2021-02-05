@@ -7,6 +7,14 @@ from time import sleep
 import file_manager as f
 import json
 
+class Seller:
+    name = ""
+    rating = ""
+    numRatings = ""
+    numProducts = ""
+
+
+
 def setTabUrls(startTab=0, count=0):
     print("SETANDO URLs DE CADA ABA")
     urls = []
@@ -104,6 +112,7 @@ def getSellersPerTab(urlsPerPagePerTab):
     u.endline()
     print("TOTAL DE URLS DE SELLERS: " + str(totalSellers))
     u.endline()
+    return sellersUrls
 
 
 def getSellersDataPerTab(sellersPerTabUrls):
@@ -113,21 +122,37 @@ def getSellersDataPerTab(sellersPerTabUrls):
         for sellerUrl in sellersUrls:
             try:
                 sleep(c.REQUEST_INTERVAL) #delay pra evitar detecção de requests massivos, o que causaria error 403
-                page = requests.get(sellerUrl, headers=c.HEADERS) 
+                page = requests.get("https://www.americanas.com.br/lojista/93-eletronicos", headers=c.HEADERS)
+                #page = requests.get("https://www.americanas.com.br/lojista/" + sellerUrl, headers=c.HEADERS) 
                 tree = parser.fromstring(page.content)
+                print(type(page.content)) 
+                print(type(tree))  
+                print(type("Ola")) 
+                f.save_file("page", "page.txt", str(page.content))
+                return 
+
+                #quando a pagina não está funcionando, é retornado "Ops! Página não encontrada"
+                result = tree.xpath('//*[@id="content-middle"]/div[4]/div/div/div/div[2]/span[1]/span/span/text()')
+                if(len(result) > 0 and result[0].strip() == "Ops!"):
+                    print("Ops!")
+                    continue
+                
+                seller = Seller()
+                seller.name = tree.xpath() 
+                return
             except:
                 print("BLA")
-            #seller = Seller()
+                return
             #Sellers.append( )
     return
 
 def main():
     start_tab = 0
-    count = c.MAX_ABAS
+    count = 1 #c.MAX_ABAS
     tabUrls = setTabUrls(start_tab, count)
     pagesPerTabUrls = getPagesPerTab(tabUrls)
     sellersPerTabUrls = getSellersPerTab(pagesPerTabUrls)
-    #getSellersDataPerTab(sellersPerTabUrls)
+    getSellersDataPerTab(sellersPerTabUrls)
 
 
 if __name__ == '__main__':
