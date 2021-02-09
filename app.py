@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-import crawler
+import url_collector
 
 class Seller:
     name = ""
@@ -42,9 +42,9 @@ def getSellersDataPerTab(sellersPerTabUrls):
 def main():
     start_tab = 0
     count = 1 #c.MAX_ABAS
-    tabUrls = crawler.setTabUrls(start_tab, count)
-    pagesPerTabUrls = crawler.getPagesPerTab(tabUrls)
-    sellersPerTabUrls = crawler.getSellersPerTab(pagesPerTabUrls)
+    tabUrls = urlCollector.setTabUrls(start_tab, count)
+    pagesPerTabUrls = urlCollector.getPagesPerTab(tabUrls)
+    sellersPerTabUrls = urlCollector.getSellersPerTab(pagesPerTabUrls)
     #getSellersDataPerTab(sellersPerTabUrls)
 
 
