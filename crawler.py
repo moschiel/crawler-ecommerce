@@ -122,66 +122,103 @@ def getSellersPerTabUrls(urlsPerPagePerTab):
 
 class Seller:
     name = ""
-    rating = ""
-    votes = ""
-    products = ""
+    rating = 0
+    votes = 0
+    products = 0
+    categories = []
 
 def getSellersData(sellersPerTab):
-    for sellers in sellersPerTab:
-        for row in range(len(sellersPerTab)):
-            for col in range(len(sellersPerTab[row])):
-                url = sellersPerTab[row][col]['ecomm_info']['url']
-                url = "https://www.americanas.com.br/lojista/webcontinental"
-                try:
-                    sleep(c.REQUEST_INTERVAL) #delay pra evitar detecção de requests massivos, o que causaria error 403
+    print ("COLETANDO DADOS DOS SELLERS DE CADA ABA")
+    pos_char = len("https://www.americanas.com.br/lojista/")
+    
+    for row in range(len(sellersPerTab)): #each row is a tab
+        char_tab = sellersPerTab[row][0]['ecomm_info']['url'][pos_char]
+        if (char_tab.isnumeric()):
+            char_tab = "#"
+        print ("COLETANDO DADOS DOS SELLERS DA ABA '"+ char_tab+ "'")
+
+        for col in range(len(sellersPerTab[row])):  #each colum is a seller within this tab
+            url = sellersPerTab[row][col]['ecomm_info']['url']
+            #url = "https://www.americanas.com.br/lojista/webcontinental"
+            
+            if(True):
+            #try:
+                while (True): #emula Do-While - enquanto status==202, repita
+                    #sleep(c.REQUEST_INTERVAL) 
                     page = requests.get(url, headers=c.HEADERS)
-                    if(page.status_code != 200):
-                        StatudCodeFail = True
-                        #continue
-                        print("ERRO NA LEITURA DOS SELLER: {url}, STATUS CODE: " + str(page.status_code))
-                        return
-                    
-                    seller = Seller()
-                    tree = parser.fromstring(page.content)
-                    seller.name = tree.xpath('//*[@id="main-top"]/div[1]/div/ol/li[2]/a/@name')[0]
-                    seller.cnpj = tree.xpath('//*[@id="main-top"]/div[1]/div/ol/li[2]/a/@id')[0]
-                    seller.rating = tree.xpath('//*[@id="main-top"]/div[4]/div/div/div/div/div/div/div[2]/div[1]/text()')[0]
+                    if(page.status_code == 200):
+                        break
+                    else:
+                        sleep(c.REQUEST_INTERVAL) #delay pra evitar detecção de requests massivos
+                        sleep(c.REQUEST_INTERVAL) #delay pra evitar detecção de requests massivos
+                        print("Re-try Status: " + str(page.status_code))
+    
+                if(page.status_code != 200):
+                    StatudCodeFail = True
+                    #continue
+                    print("ERRO NA LEITURA DOS SELLER DA ABA '" + char_tab + "': " + url + ", STATUS CODE: " + str(page.status_code))
+                    return
+                
+                seller = Seller()
+                tree = parser.fromstring(page.content)
+                seller.name = tree.xpath('//*[@id="main-top"]/div[1]/div/ol/li[2]/a/@name')[0]
+                seller.cnpj = tree.xpath('//*[@id="main-top"]/div[1]/div/ol/li[2]/a/@id')[0]
+                
+                #alguns logistas podem não ter rankings
+                try:
+                    seller.rating = tree.xpath('//*[@id="main-top"]/div[4]/div/div/div/div/div/div/div[2]/div[1]/text()')[0]  
+                    seller.rating = float(seller.rating)
                     seller.votes = tree.xpath('//*[@id="main-top"]/div[4]/div/div/div/div/div/div/div[2]/div[2]/text()')[0]
                     seller.votes = seller.votes.replace("avaliações", "").strip()
                     seller.votes = seller.votes.replace(".", "")
+                    seller.votes = int(seller.votes)
+                except:
+                    seller.rating = "--"
+                    seller.votes = "--"
+
+                #alguns logistas não tem produtos
+                try:
                     seller.products = tree.xpath('//*[@id="sort-bar"]/div/aside/div/div[1]/span/text()')[0]
                     seller.products = seller.products.replace("produtos", "").strip()
-                    seller.products = seller.products.replace(".", "")    
-                    #print(seller.name, seller.cnpj, seller.rating, seller.votes, seller.products)
+                    seller.products = seller.products.replace(".", "")
+                    seller.products = int(seller.products)
+                except:
+                    seller.products = "--"
 
-                    categoriesName = tree.xpath('//*[@id="collapse-categorias"]/ul/li/a/span/text()')
-                    categoriesCount = tree.xpath('//*[@id="collapse-categorias"]/ul/li/a/@data-results-count') 
-                    #print(categoriesName)
-                    #print(categoriesCount)
-                    
-                    #monta json das categorias
-                    categories = []
-                    for i in range(len(categoriesName)):
-                        categories.append({
-                            "name": categoriesName[i],
-                            "count": int(categoriesCount[i])
-                        })
+                #print(seller.name, seller.cnpj, seller.rating, seller.votes, seller.products)
 
-                    #insere dados no json
-                    sellersPerTab[row][col]['ecomm_info'].update({
-                        "name": seller.name,
-                        "cnpj": seller.cnpj,
-                        "rating": float(seller.rating),
-                        "votes": int(seller.votes),
-                        "products": int(seller.products),
-                        "categories": categories
+                categoriesName = tree.xpath('//*[@id="collapse-categorias"]/ul/li/a/span/text()')
+                categoriesCount = tree.xpath('//*[@id="collapse-categorias"]/ul/li/a/@data-results-count') 
+                #print(categoriesName)
+                #print(categoriesCount)
+                
+                #monta json das categorias
+                seller.categories = [] #bugfix, limpando a cada iteracao, em teoria nao precisava pois seller = Seller() tinha que vir limpo 
+                for i in range(len(categoriesName)):
+                    seller.categories.append({
+                        "name": categoriesName[i],
+                        "count": int(categoriesCount[i])
                     })
 
-                    break
-                except:
-                    print("ERRO NA LEITURA DO SELLER: " + url)
-                    return
-                return   
+                #insere dados do seller no json
+                sellersPerTab[row][col]['ecomm_info'].update({
+                    "name": seller.name,
+                    "cnpj": seller.cnpj,
+                    "rating": seller.rating,
+                    "votes": seller.votes,
+                    "products": seller.products,
+                    "categories": seller.categories
+                })
+                
+                print(col)
+                #if(col == 1):
+                #    break
 
-            f.save_file("data_sellers", "data_sellers_tab_#.json", json.dumps(sellersPerTab[row]))  
+                #break
+            #except:
+            #    print("ERRO NA LEITURA DO SELLER NA ABA '"+ char_tab+ "': " + url)
+            #    return
+            #return   
+
+        f.save_file("data_sellers", "data_sellers_tab_" + char_tab + ".json", json.dumps(sellersPerTab[row]))  
 
