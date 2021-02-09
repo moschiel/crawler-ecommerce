@@ -144,13 +144,11 @@ def getSellersData(sellersPerTab):
             if(True):
             #try:
                 while (True): #emula Do-While - enquanto status==202, repita
-                    #sleep(c.REQUEST_INTERVAL) 
+                    sleep(c.REQUEST_INTERVAL) #delay pra evitar detecção de requests massivos
                     page = requests.get(url, headers=c.HEADERS)
-                    if(page.status_code == 200):
+                    if(page.status_code != 202):
                         break
                     else:
-                        sleep(c.REQUEST_INTERVAL) #delay pra evitar detecção de requests massivos
-                        sleep(c.REQUEST_INTERVAL) #delay pra evitar detecção de requests massivos
                         print("Re-try Status: " + str(page.status_code))
     
                 if(page.status_code != 200):
@@ -210,9 +208,9 @@ def getSellersData(sellersPerTab):
                     "categories": seller.categories
                 })
                 
-                print(col)
-                #if(col == 1):
-                #    break
+                print(str(col) + ": " + seller.name)
+                if(col == 3):
+                    break
 
                 #break
             #except:
