@@ -7,117 +7,77 @@ from time import sleep
 import file_manager as f
 import json
 
-#seta a rota para visualizar os lojistas por aba/letra
-#Ex: https://www.americanas.com.br/mapa-do-site/lojista/f/letra-a
-def setTabUrls(startTab=0, count=0):
-    print("SETANDO URLs DE CADA ABA")
-    urls = []
-    for index in range(count):
-        char_tab = u.NumberToLetter(startTab + index)
-        url = "https://www.americanas.com.br/mapa-do-site/lojista/f/letra-" + char_tab
-        urls.append(url)
-        if(c.PRINT_ABA_URL):
-            print (url)
-    u.endline()
-    return urls
-
-#cada aba/letra, tem um numero de paginas, coletamos cada url de pagina de cada aba/letra
-#Ex: 
-# https://www.americanas.com.br/mapa-do-site/lojista/f/letra-a/pagina-1
-# https://www.americanas.com.br/mapa-do-site/lojista/f/letra-a/pagina-2 
-# ...
-def getPagesPerTabUrls(TabUrls):
-    print("COLETANDO URL DE PAGINAS DE CADA ABA")
-    pages_per_tab = []
-    for url in TabUrls:
-        #read last character
-        char_tab = url[-1:] if url[-1:] != "0" else "#" 
-        try:
-            page_urls = f.read_file("url_pages_tab", "url_pages_tab_" + char_tab + ".json")
-            if(page_urls != False):
-                page_urls = json.loads(page_urls)
-                print("carregado " + str(len(page_urls)) + " urls de pagina da aba '" + char_tab + "'") 
-            else:
-                sleep(c.REQUEST_INTERVAL) #delay pra evitar detecção de requests massivos, o que causaria error 403
-                page = requests.get(url, headers=c.HEADERS)
-                if(page.status_code != 200):
-                    print("ERRO NA LEITURA DE PAGINAS DA ABA '" + char_tab + "', STATUS CODE: " + str(page.status_code))
-                    continue
-
-                tree = parser.fromstring(page.content)
-                page_urls = tree.xpath('//*[@id="summary-pane-'+ char_tab +'"]/div/div/div/div/ul/li/a/@href')
-                page_urls = u.RemoveDuplicates(page_urls) 
-                page_urls = u.RemoveIfContain(page_urls, "#")  
-            
-                for i in range(len(page_urls)):
-                    if(("pagina" not in page_urls[i]) and ("letra" in page_urls[i])):
-                        page_urls[i] += "/pagina-1"
-                    page_urls[i] = page_urls[i][30:] # armazena apenas o conteudo depois da string 'letra-'
-                    if c.PRINT_PAGE_URL:
-                        print(page_urls[i])
-                f.save_file("url_pages_tab", "url_pages_tab_" + char_tab + ".json", json.dumps(page_urls))
-                print("salvo " + str(len(page_urls)) + " urls de pagina da aba '" + char_tab + "'")
-
-            pages_per_tab.append(page_urls)
-        except:
-            print("ERRO NA LEITURA DE PAGINAS DA ABA '" + char_tab + "'")
-    u.endline() 
-    return pages_per_tab
-
-#coleta a url individual de cada seller, por aba/letra
+#coleta a url individual de cada seller, por letra
 #Ex: https://www.americanas.com.br/lojista/3n-s-lasers
-def getSellersPerTabUrls(urlsPerPagePerTab):
-    print ("COLETANDO URL DOS SELLERS DE CADA ABA")
-    sellersUrls = []
-    totalSellers = 0
-    for pagesUrls in urlsPerPagePerTab:
-        char_tab = pagesUrls[0][0] if pagesUrls[0][0] != "0" else "#"
-        sellersCollectedJson = f.read_file("url_sellers", "url_sellers_tab_" + char_tab + ".json")
+def getSellersByLetterUrls(letter):
+    letter = u.NumberToLetter(letter)
+    print ("COLETANDO URL DOS SELLERS DA LETRA " + letter)
+    pageNumber = 0
 
-        if(sellersCollectedJson != False):
-            sellersCollectedJson = json.loads(sellersCollectedJson)
-            print("carregado " + str(len(sellersCollectedJson)) + " urls de sellers da aba '" + char_tab + "'")
-        else:
-            sellersUrlsCollected = []
-            StatudCodeFail = False
-            for pageUrl in pagesUrls:
-                try:
-                    sleep(c.REQUEST_INTERVAL) #delay pra evitar detecção de requests massivos, o que causaria error 403
-                    page = requests.get("https://www.americanas.com.br/mapa-do-site/lojista/f/letra-" + pageUrl, headers=c.HEADERS)
+    #verifica se existe arquivo, e continua coleta de onde parou
+    sellersCollectedJson = f.read_file("url_sellers", "url_sellers_letter_" + letter + ".json")
+    if(sellersCollectedJson != False):
+        sellersCollectedJson = json.loads(sellersCollectedJson)
+        print("carregado " + str(len(sellersCollectedJson)) + " urls de sellers da letra " + letter)
+        print("continuando coleta ...")
+        pageNumber = len(sellersCollectedJson)
+    else:
+        sellersCollectedJson = []
 
-                    if(page.status_code != 200):
-                        StatudCodeFail = True
-                        #continue
-                        print("ERRO NA LEITURA DOS SELLERS DA ABA '" + char_tab + "', PAGINA " + pageUrl[-1:] + ", STATUS CODE: " + str(page.status_code))
-                        return
-                    tree = parser.fromstring(page.content)
-                    page_urls = tree.xpath('//*[@id="summary-pane-' + char_tab + '"]/div/ul/li/ul/li/h3/a/@href')
-                    
-                    sellersUrlsCollected += page_urls
-                except:
-                    print("ERRO NA COLETA DE URLS DA PAGINA '" + pageUrl[-1:] + "'")
-            #quando trocavamos de pagina no for acima, muitas urls vem repetido
-            sellersUrlsCollected = u.RemoveDuplicates(sellersUrlsCollected) 
-            #algumas urls falsas geralmente tem a substring '-teste'
-            sellersUrlsCollected = u.RemoveIfContain(sellersUrlsCollected, '-teste') 
-            #converte para um formato json mais legível
-            sellersCollectedJson = []
-            for url in sellersUrlsCollected:
-                sellersCollectedJson.append({
-                    "ecomm_info": {
-                        "url": "https://www.americanas.com.br" + url
-                    }
-                })
+    sellersUrlsCollected = []
+    countControl = 0
+    while(True):  
+        pageNumber = pageNumber + 1    
+        print("page number: " + str(pageNumber))    
+        try:
+            while (True): #emula Do-While - enquanto status==202, repita
+                sleep(c.REQUEST_INTERVAL) #delay pra evitar detecção de requests massivos
+                ch = letter if letter != "#" else "0"
+                pageNumberUrl = "https://www.americanas.com.br/mapa-do-site/lojista/f/letra-" + ch + "/pagina-" + str(pageNumber)
+                page = requests.get(pageNumberUrl, headers=c.HEADERS)
+                if(page.status_code != 202):
+                    break
+                else:
+                    print("Re-try Status: " + str(page.status_code))
+            
+            if(page.status_code != 200):
+                print("ERRO NA LEITURA DOS SELLERS DA LETRA '" + letter + "', PAGINA " + str(pageNumber) + ", STATUS CODE: " + str(page.status_code))
+                return
 
-            f.save_file("url_sellers", "url_sellers_tab_" + char_tab + ".json", json.dumps(sellersCollectedJson))
-            print("salvo " + str(len(sellersCollectedJson)) + " urls de sellers da aba '" + char_tab + "' - COMPLETE:" + str(not StatudCodeFail))
-        
-        totalSellers += len(sellersCollectedJson)
-        sellersUrls.append(sellersCollectedJson)
-    u.endline()
-    print("TOTAL DE URLS DE SELLERS: " + str(totalSellers))
-    u.endline()
-    return sellersUrls
+            tree = parser.fromstring(page.content)
+            page_urls = tree.xpath('//*[@id="summary-pane-' + letter + '"]/div/ul/li/ul/li/h3/a/@href')
+            
+            if(len(page_urls) > 0):
+                sellersUrlsCollected += page_urls
+            
+            # a cada X paginas , ou se acabar as paginas, salvamos o arquivo
+            countControl = countControl + 1
+            if(countControl >= 10 or len(page_urls) == 0):
+                print("salvando...")
+                countControl = 0
+                #quando trocavamos de pagina , muitas urls vem repetido
+                sellersUrlsCollected = u.RemoveDuplicates(sellersUrlsCollected) 
+                #algumas urls falsas geralmente tem a substring '-teste'
+                sellersUrlsCollected = u.RemoveIfContain(sellersUrlsCollected, '-teste') 
+                #converte para um formato json mais legível
+                for url in sellersUrlsCollected:
+                    sellersCollectedJson.append({
+                        "ecomm_info": {
+                            "url": "https://www.americanas.com.br" + url
+                        }
+                    })
+                sellersUrlsCollected = []
+                f.save_file("url_sellers", "url_sellers_letter_" + letter + ".json", json.dumps(sellersCollectedJson))
+
+            if(len(page_urls) == 0):
+                print("CONCLUIDO COLETA DE URLS DOS SELLERS DA LETRA " + letter)
+                print("salvo " + str(len(sellersCollectedJson)) + " urls de sellers da letra " + letter)
+                u.endline()
+                break
+        except:
+            print("ERRO NA COLETA DE URLS DA LETRA " + letter + ", PAGINA " + str(pageNumber))
+
+    return sellersCollectedJson
 
 
 class Seller:
@@ -127,18 +87,18 @@ class Seller:
     products = 0
     categories = []
 
-def getSellersData(sellersPerTab):
-    print ("COLETANDO DADOS DOS SELLERS DE CADA ABA")
+def getSellersData(sellersPerLetter):
+    print ("COLETANDO DADOS DOS SELLERS DE CADA LETRA")
     pos_char = len("https://www.americanas.com.br/lojista/")
     
-    for row in range(len(sellersPerTab)): #each row is a tab
-        char_tab = sellersPerTab[row][0]['ecomm_info']['url'][pos_char]
-        if (char_tab.isnumeric()):
-            char_tab = "#"
-        print ("COLETANDO DADOS DOS SELLERS DA ABA '"+ char_tab+ "'")
+    for row in range(len(sellersPerLetter)): #each row is a letter
+        letter = sellersPerLetter[row][0]['ecomm_info']['url'][pos_char]
+        if (letter.isnumeric()):
+            letter = "#"
+        print ("COLETANDO DADOS DOS SELLERS DA LETRA '"+ letter+ "'")
 
-        for col in range(len(sellersPerTab[row])):  #each colum is a seller within this tab
-            url = sellersPerTab[row][col]['ecomm_info']['url']
+        for col in range(len(sellersPerLetter[row])):  #each colum is a seller within this letter
+            url = sellersPerLetter[row][col]['ecomm_info']['url']
             #url = "https://www.americanas.com.br/lojista/webcontinental"
             
             if(True):
@@ -154,7 +114,7 @@ def getSellersData(sellersPerTab):
                 if(page.status_code != 200):
                     StatudCodeFail = True
                     #continue
-                    print("ERRO NA LEITURA DOS SELLER DA ABA '" + char_tab + "': " + url + ", STATUS CODE: " + str(page.status_code))
+                    print("ERRO NA LEITURA DOS SELLER DA LETRA '" + letter + "': " + url + ", STATUS CODE: " + str(page.status_code))
                     return
                 
                 seller = Seller()
@@ -199,7 +159,7 @@ def getSellersData(sellersPerTab):
                     })
 
                 #insere dados do seller no json
-                sellersPerTab[row][col]['ecomm_info'].update({
+                sellersPerLetter[row][col]['ecomm_info'].update({
                     "name": seller.name,
                     "cnpj": seller.cnpj,
                     "rating": seller.rating,
@@ -214,9 +174,9 @@ def getSellersData(sellersPerTab):
 
                 #break
             #except:
-            #    print("ERRO NA LEITURA DO SELLER NA ABA '"+ char_tab+ "': " + url)
+            #    print("ERRO NA LEITURA DO SELLER NA LETRA '"+ letter+ "': " + url)
             #    return
             #return   
 
-        f.save_file("data_sellers", "data_sellers_tab_" + char_tab + ".json", json.dumps(sellersPerTab[row]))  
+        f.save_file("data_sellers", "data_sellers_letter_" + letter + ".json", json.dumps(sellersPerLetter[row]))  
 

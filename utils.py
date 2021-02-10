@@ -18,6 +18,6 @@ def RemoveIfContain(data_array, selector):
 
 def NumberToLetter(num):
     if(num==0):
-        return '0'
+        return '#'
     else:
         return chr(ord('a')+ num - 1) 
