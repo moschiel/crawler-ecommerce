@@ -3,11 +3,9 @@ import crawler
 
 
 def main():
-    start_letter = 0
-    #count = 1 #c.MAX_ABAS
-    sellersPerTabUrls = crawler.getSellersByLetterUrls(start_letter)
-    #crawler.getSellersData(sellersPerTabUrls)
-
+    letter = 0
+    crawler.getSellersByLetterUrls(letter)
+    crawler.getSellersData(letter)
 
 if __name__ == '__main__':
     main()
