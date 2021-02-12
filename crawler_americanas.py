@@ -11,7 +11,7 @@ import json
 #Ex: https://www.americanas.com.br/lojista/3n-s-lasers
 def getSellersByLetterUrls(letter):
     letter = u.NumberToLetter(letter)
-    print ("COLETANDO URL DOS SELLERS DA LETRA " + letter)
+    print ("[Americanas]COLETANDO URL DOS SELLERS DA LETRA " + letter)
 
     #verifica se existe arquivo, e continua coleta de onde parou
     sellersJSON = f.read_file("url_sellers", "url_sellers_letter_" + letter + ".json")
@@ -46,11 +46,12 @@ def getSellersByLetterUrls(letter):
 
             tree = parser.fromstring(page.content)
             page_urls = tree.xpath('//*[@id="summary-pane-' + letter + '"]/div/ul/li/ul/li/h3/a/@href')
-            
-            if(firstLoop and len(page_urls) == 0): #if (firstLoop and (there is no more pages))
+            completed = (len(page_urls) == 0)
+
+            if(firstLoop and completed): #if (firstLoop and (there is no more pages))
                 u.endline()
                 return sellersJSON #arquivo json carregado dessa letra ja estava concluida
-            elif(len(page_urls) > 0):
+            elif(not completed):
                 sellersUrls += page_urls    
 
             if(firstLoop):
@@ -58,14 +59,12 @@ def getSellersByLetterUrls(letter):
                 if(pageNumber > 1):
                     print("continuando coleta apartir da pagina " + str(pageNumber))
             
-            if(len(page_urls) == 0): #concluido a coleta
-                u.endline() 
-                break
-            print("page number: " + str(pageNumber))
+            if(not completed):
+                print("page number: " + str(pageNumber))
 
-            # a cada X paginas , salvamos o arquivo
+            # a cada X paginas , ou se conclui a coleta, salvamos o arquivo
             saveControl = saveControl + 1
-            if(saveControl >= 10):
+            if(saveControl >= 10 or completed):
                 print("salvando...")
                 saveControl = 0
                 #quando trocavamos de pagina , muitas urls vem repetido
@@ -75,23 +74,26 @@ def getSellersByLetterUrls(letter):
                 #converte para um formato json mais legível
                 for url in sellersUrls:
                     sellersJSON.append({
-                        "ecomm_info": {
+                        "americanas": {
                             "url": "https://www.americanas.com.br" + url
                         }
                     })
                 sellersUrls = []
+                
+                if(completed):
+                    #antes de rotornar, percorre todo o Json pra remover duplicatas caso exista
+                    sellersJSON = u.RemoveDuplicates(sellersJSON)     
+
                 f.save_file("url_sellers", "url_sellers_letter_" + letter + ".json", json.dumps(sellersJSON))
-                f.save_file("url_sellers", "url_sellers_letter_" + letter + "_last.txt", str(pageNumber))
+                f.save_file("url_sellers", "url_sellers_letter_" + letter + "_last.txt", str(pageNumber))  
+                
+                if(completed):
+                    print("salvo " + str(len(sellersJSON)) + " urls de sellers da letra " + letter)
+                    u.endline() 
+                    return sellersJSON
         except:
             print("ERRO NA COLETA DE URLS DA LETRA " + letter + ", PAGINA " + str(pageNumber))
-
-    #antes de rotornar, percorre todo o Json pra remover duplicatas caso exista
-    sellersJSON = u.RemoveDuplicates(sellersJSON) 
-    f.save_file("url_sellers", "url_sellers_letter_" + letter + ".json", json.dumps(sellersJSON))
-    f.save_file("url_sellers", "url_sellers_letter_" + letter + "_last.txt", str(pageNumber))  
-    print("salvo " + str(len(sellersJSON)) + " urls de sellers da letra " + letter)
-    u.endline() 
-    return sellersJSON
+            return
 
 
 class Seller:
@@ -103,7 +105,7 @@ class Seller:
 
 def getSellersData(letter):
     letter = u.NumberToLetter(letter)
-    print ("COLETANDO DADOS DOS SELLERS DA LETRA " + letter)
+    print ("[Americanas]COLETANDO DADOS DOS SELLERS DA LETRA " + letter)
 
     #verifica se existe arquivo
     sellersJSON = f.read_file("data_sellers", "data_sellers_letter_" + letter + ".json")
@@ -114,17 +116,17 @@ def getSellersData(letter):
         if sellersJSON != False:
             sellersJSON = json.loads(sellersJSON)
         else:
-            print("Nenhum arquivo de URLs encontrado")
+            print('[Americanas]arquivo "url_sellers_letter_' + letter + '.json" não encontrado')
             return
 
     saveControl = 0
     for idx in range(len(sellersJSON)): 
-        if("cnpj" in sellersJSON[idx]["ecomm_info"]):    
+        if("cnpj" in sellersJSON[idx]["americanas"]):    
             # pula sellers ja coletados 
             # print(str(idx) + "(skipped)")
             continue
         
-        url = sellersJSON[idx]['ecomm_info']['url']
+        url = sellersJSON[idx]['americanas']['url']
         
         try:
             while (True): #emula Do-While - enquanto status==202, repita
@@ -136,7 +138,7 @@ def getSellersData(letter):
                     print("Re-try Status: " + str(page.status_code))
 
             if(page.status_code != 200):
-                print("ERRO NA LEITURA DOS SELLER DA LETRA " + letter + " , " + url + " , STATUS CODE: " + str(page.status_code))
+                print("[Americanas]ERRO NA LEITURA DOS SELLER DA LETRA " + letter + " , " + url + " , STATUS CODE: " + str(page.status_code))
                 return
             
             seller = Seller()
@@ -177,7 +179,7 @@ def getSellersData(letter):
                 })
 
             #insere dados do seller no json
-            sellersJSON[idx]['ecomm_info'].update({
+            sellersJSON[idx]['americanas'].update({
                 "name": seller.name,
                 "cnpj": seller.cnpj,
                 "rating": seller.rating,
@@ -194,11 +196,11 @@ def getSellersData(letter):
                 saveControl = 0
                 f.save_file("data_sellers", "data_sellers_letter_" + letter + ".json", json.dumps(sellersJSON))  
         except:
-            print("ERRO NA LEITURA DO SELLER NA LETRA '"+ letter+ "': " + url)
+            print("[Americanas]ERRO NA LEITURA DO SELLER NA LETRA '"+ letter+ "': " + url)
             return
  
 
     f.save_file("data_sellers", "data_sellers_letter_" + letter + ".json", json.dumps(sellersJSON))  
-    print("salvo dados dos sellers da letra " + letter)
+    print("[Americanas]salvo dados dos sellers da letra " + letter)
     u.endline()
     return sellersJSON
