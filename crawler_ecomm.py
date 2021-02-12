@@ -105,22 +105,12 @@ def getSellersData(letter):
     letter = u.NumberToLetter(letter)
     print ("COLETANDO DADOS DOS SELLERS DA LETRA " + letter)
 
-    #verifica se existe arquivo, e continua coleta de onde parou
+    #verifica se existe arquivo
     sellersJSON = f.read_file("data_sellers", "data_sellers_letter_" + letter + ".json")
-    sellerIndex = f.read_file("data_sellers", "data_sellers_letter_" + letter + "_last.txt")
-    if(sellersJSON != False and sellerIndex != False):
+    if(sellersJSON != False ):
         sellersJSON = json.loads(sellersJSON)
-        sellerIndex = int(sellerIndex)
-        print("carregado até o index " + str(sellerIndex) + " os dados de sellers da letra " + letter)
-        if(len(sellersJSON) == (sellerIndex + 1)): #arquivo json carregado dessa letra ja estava concluidao
-            u.endline()
-            return sellersJSON
-        else:
-            sellerIndex = sellerIndex + 1
-            print("continuando coleta de dados apartir do index " + str(sellerIndex))
-    else: #se nao carrega arquivo de URLs da etapa anterior
+    else: #se nao existe, carrega arquivo de URLs da etapa anterior
         sellersJSON = f.read_file("url_sellers", "url_sellers_letter_" + letter + ".json")
-        sellerIndex = 0
         if sellersJSON != False:
             sellersJSON = json.loads(sellersJSON)
         else:
@@ -128,13 +118,15 @@ def getSellersData(letter):
             return
 
     saveControl = 0
-    auxSellerIndex = sellerIndex
-    for idx in range(sellerIndex, len(sellersJSON)): 
-        auxSellerIndex = idx
-        url = sellersJSON[idx]['ecomm_info']['url']
-        #url = "https://www.americanas.com.br/lojista/webcontinental"
+    for idx in range(len(sellersJSON)): 
+        if("cnpj" in sellersJSON[idx]["ecomm_info"]):    
+            # pula sellers ja coletados 
+            # print(str(idx) + "(skipped)")
+            continue
         
-        if(True): #try:
+        url = sellersJSON[idx]['ecomm_info']['url']
+        
+        try:
             while (True): #emula Do-While - enquanto status==202, repita
                 sleep(c.REQUEST_INTERVAL) #delay pra evitar detecção de requests massivos
                 page = requests.get(url, headers=c.HEADERS)
@@ -201,14 +193,12 @@ def getSellersData(letter):
                 print("salvando...")
                 saveControl = 0
                 f.save_file("data_sellers", "data_sellers_letter_" + letter + ".json", json.dumps(sellersJSON))  
-                f.save_file("data_sellers", "data_sellers_letter_" + letter + "_last.txt", str(idx))  
-        #except:
-        #    print("ERRO NA LEITURA DO SELLER NA LETRA '"+ letter+ "': " + url)
-        #    return
-        #return   
+        except:
+            print("ERRO NA LEITURA DO SELLER NA LETRA '"+ letter+ "': " + url)
+            return
+ 
 
     f.save_file("data_sellers", "data_sellers_letter_" + letter + ".json", json.dumps(sellersJSON))  
-    f.save_file("data_sellers", "data_sellers_letter_" + letter + "_last.txt", str(auxSellerIndex)) 
     print("salvo dados dos sellers da letra " + letter)
     u.endline()
     return sellersJSON

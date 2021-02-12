@@ -1,11 +1,11 @@
 #! /usr/bin/env python3
-import crawler
+import crawler_ecomm
 
 
 def main():
     letter = 0
-    crawler.getSellersByLetterUrls(letter)
-    crawler.getSellersData(letter)
+    crawler_ecomm.getSellersByLetterUrls(letter)
+    crawler_ecomm.getSellersData(letter)
 
 if __name__ == '__main__':
     main()
