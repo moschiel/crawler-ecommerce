@@ -93,7 +93,7 @@ def getSellersByLetterUrls(letter):
                     return sellersJSON
         except:
             print("ERRO NA COLETA DE URLS DA LETRA " + letter + ", PAGINA " + str(pageNumber))
-            return
+            return False
 
 
 class Seller:
@@ -117,7 +117,7 @@ def getSellersData(letter):
             sellersJSON = json.loads(sellersJSON)
         else:
             print('[Americanas]arquivo "url_sellers_letter_' + letter + '.json" não encontrado')
-            return
+            return False
 
     saveControl = 0
     for idx in range(len(sellersJSON)): 
@@ -139,12 +139,14 @@ def getSellersData(letter):
 
             if(page.status_code != 200):
                 print("[Americanas]ERRO NA LEITURA DOS SELLER DA LETRA " + letter + " , " + url + " , STATUS CODE: " + str(page.status_code))
-                return
+                return False
             
             seller = Seller()
             tree = parser.fromstring(page.content)
             seller.name = tree.xpath('//*[@id="main-top"]/div[1]/div/ol/li[2]/a/@name')[0]
+            seller.name = seller.name.strip()
             seller.cnpj = tree.xpath('//*[@id="main-top"]/div[1]/div/ol/li[2]/a/@id')[0]
+            seller.cnpj = seller.cnpj.strip()
             
             #usado TRY pois alguns logistas podem não ter rankings
             try:
@@ -197,7 +199,7 @@ def getSellersData(letter):
                 f.save_file("data_sellers", "data_sellers_letter_" + letter + ".json", json.dumps(sellersJSON))  
         except:
             print("[Americanas]ERRO NA LEITURA DO SELLER NA LETRA '"+ letter+ "': " + url)
-            return
+            return False
  
 
     f.save_file("data_sellers", "data_sellers_letter_" + letter + ".json", json.dumps(sellersJSON))  
