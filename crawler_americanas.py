@@ -7,18 +7,20 @@ from time import sleep
 import file_manager as f
 import json
 
+logId = '[Americanas]:'
+
 #coleta a url individual de cada seller, por letra
 #Ex: https://www.americanas.com.br/lojista/3n-s-lasers
-def getSellersByLetterUrls(letter):
+def getSellersUrls(letter):
     letter = u.NumberToLetter(letter)
-    print ("[Americanas]COLETANDO URL DOS SELLERS DA LETRA " + letter)
+    print (logId + "COLETANDO URL DOS SELLERS DA LETRA " + letter)
 
     #verifica se existe arquivo, e continua coleta de onde parou
     sellersJSON = f.read_file("url_sellers", "url_sellers_letter_" + letter + ".json")
     pageNumber = f.read_file("url_sellers", "url_sellers_letter_" + letter + "_last.txt")
     if(sellersJSON != False and pageNumber != False):
         sellersJSON = json.loads(sellersJSON)
-        print("carregado " + str(len(sellersJSON)) + " urls de sellers da letra " + letter)
+        print(logId + "carregado " + str(len(sellersJSON)) + " urls de sellers")
         pageNumber = int(pageNumber)
     else:
         sellersJSON = []
@@ -34,14 +36,14 @@ def getSellersByLetterUrls(letter):
             while (True): #emula Do-While - enquanto status==202, repita
                 sleep(c.REQUEST_INTERVAL) #delay pra evitar detecção de requests massivos
                 pageNumberUrl = "https://www.americanas.com.br/mapa-do-site/lojista/f/letra-" + ch + "/pagina-" + str(pageNumber)
-                page = requests.get(pageNumberUrl, headers=c.HEADERS)
+                page = requests.get(pageNumberUrl, headers=c.HEADERS_AMERICANAS)
                 if(page.status_code != 202):
                     break
                 else:
                     print("Re-try Status: " + str(page.status_code))
             
             if(page.status_code != 200):
-                print("ERRO NA LEITURA DOS SELLERS DA LETRA '" + letter + "', PAGINA " + str(pageNumber) + ", STATUS CODE: " + str(page.status_code))
+                print(logId + "ERRO NA LEITURA DOS SELLERS DA LETRA '" + letter + "', PAGINA " + str(pageNumber) + ", STATUS CODE: " + str(page.status_code))
                 return False
 
             tree = parser.fromstring(page.content)
@@ -57,7 +59,7 @@ def getSellersByLetterUrls(letter):
             if(firstLoop):
                 firstLoop = False
                 if(pageNumber > 1):
-                    print("continuando coleta apartir da pagina " + str(pageNumber))
+                    print(logId + "continuando coleta apartir da pagina " + str(pageNumber))
             
             if(not completed):
                 print("page number: " + str(pageNumber))
@@ -88,11 +90,11 @@ def getSellersByLetterUrls(letter):
                 f.save_file("url_sellers", "url_sellers_letter_" + letter + "_last.txt", str(pageNumber))  
                 
                 if(completed):
-                    print("salvo " + str(len(sellersJSON)) + " urls de sellers da letra " + letter)
+                    print(logId + "salvo " + str(len(sellersJSON)) + " urls de sellers da letra " + letter)
                     u.endline() 
                     return sellersJSON
         except:
-            print("ERRO NA COLETA DE URLS DA LETRA " + letter + ", PAGINA " + str(pageNumber))
+            print(logId + "ERRO NA COLETA DE URLS DA LETRA " + letter + ", PAGINA " + str(pageNumber))
             return False
 
 
@@ -105,7 +107,7 @@ class Seller:
 
 def getSellersData(letter):
     letter = u.NumberToLetter(letter)
-    print ("[Americanas]COLETANDO DADOS DOS SELLERS DA LETRA " + letter)
+    print (logId + "COLETANDO DADOS DOS SELLERS DA LETRA " + letter)
 
     #verifica se existe arquivo
     sellersJSON = f.read_file("data_sellers", "data_sellers_letter_" + letter + ".json")
@@ -116,9 +118,20 @@ def getSellersData(letter):
         if sellersJSON != False:
             sellersJSON = json.loads(sellersJSON)
         else:
-            print('[Americanas]arquivo "url_sellers_letter_' + letter + '.json" não encontrado')
+            print(logId + 'arquivo "url_sellers_letter_' + letter + '.json" não encontrado')
             return False
 
+    #verifica se esse arquivo já não esta 100% coletado
+    completed = True
+    for idx in range(len(sellersJSON)): 
+        if("cnpj" not in sellersJSON[idx]["americanas"]):    
+            completed = False
+            break
+    if completed:
+        print(logId + "carregado " + str(len(sellersJSON)) + ' sellers')
+        u.endline()
+        return sellersJSON
+        
     saveControl = 0
     for idx in range(len(sellersJSON)): 
         if("cnpj" in sellersJSON[idx]["americanas"]):    
@@ -131,14 +144,14 @@ def getSellersData(letter):
         try:
             while (True): #emula Do-While - enquanto status==202, repita
                 sleep(c.REQUEST_INTERVAL) #delay pra evitar detecção de requests massivos
-                page = requests.get(url, headers=c.HEADERS)
+                page = requests.get(url, headers=c.HEADERS_AMERICANAS)
                 if(page.status_code != 202):
                     break
                 else:
                     print("Re-try Status: " + str(page.status_code))
 
             if(page.status_code != 200):
-                print("[Americanas]ERRO NA LEITURA DOS SELLER DA LETRA " + letter + " , " + url + " , STATUS CODE: " + str(page.status_code))
+                print(logId + "ERRO NA LEITURA DOS SELLER DA LETRA " + letter + " , " + url + " , STATUS CODE: " + str(page.status_code))
                 return False
             
             seller = Seller()
@@ -198,11 +211,11 @@ def getSellersData(letter):
                 saveControl = 0
                 f.save_file("data_sellers", "data_sellers_letter_" + letter + ".json", json.dumps(sellersJSON))  
         except:
-            print("[Americanas]ERRO NA LEITURA DO SELLER NA LETRA '"+ letter+ "': " + url)
+            print(logId + "ERRO NA LEITURA DO SELLER NA LETRA '"+ letter+ "': " + url)
             return False
  
 
     f.save_file("data_sellers", "data_sellers_letter_" + letter + ".json", json.dumps(sellersJSON))  
-    print("[Americanas]salvo dados dos sellers da letra " + letter)
+    print(logId + "salvo dados dos sellers da letra " + letter)
     u.endline()
     return sellersJSON

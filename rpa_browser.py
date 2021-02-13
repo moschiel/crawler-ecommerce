@@ -40,7 +40,6 @@ def test():
     
 
     print(cnpj, votes, score, products)
-    r.wait(3)
     r.close()
     print("closed rpa")
 
