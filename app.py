@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 import crawler_americanas as americanas
 import crawler_reclameaqui as reclameaqui
+import crawler_google as google
 
 
 def main():
@@ -8,6 +9,7 @@ def main():
     if americanas.getSellersUrls(letter) != False:
         if americanas.getSellersData(letter) != False:
             reclameaqui.getReclameAquiData(letter)
+            google.getGoogleData(letter)
 
 if __name__ == '__main__':
     main()
