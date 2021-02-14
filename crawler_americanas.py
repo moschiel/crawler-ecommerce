@@ -16,8 +16,8 @@ def getSellersUrls(letter):
     print (logId + "COLETANDO URL DOS SELLERS DA LETRA " + letter)
 
     #verifica se existe arquivo, e continua coleta de onde parou
-    sellersJSON = f.read_file("url_sellers", "url_sellers_letter_" + letter + ".json")
-    pageNumber = f.read_file("url_sellers", "url_sellers_letter_" + letter + "_last.txt")
+    sellersJSON = f.read_file("data_sellers", "data_sellers_letter_" + letter + ".json")
+    pageNumber = f.read_file("data_sellers", "data_sellers_letter_" + letter + "_last.txt")
     if(sellersJSON != False and pageNumber != False):
         sellersJSON = json.loads(sellersJSON)
         print(logId + "carregado " + str(len(sellersJSON)) + " urls de sellers")
@@ -86,8 +86,8 @@ def getSellersUrls(letter):
                     #antes de rotornar, percorre todo o Json pra remover duplicatas caso exista
                     sellersJSON = u.RemoveDuplicates(sellersJSON)     
 
-                f.save_file("url_sellers", "url_sellers_letter_" + letter + ".json", json.dumps(sellersJSON))
-                f.save_file("url_sellers", "url_sellers_letter_" + letter + "_last.txt", str(pageNumber))  
+                f.save_file("data_sellers", "data_sellers_letter_" + letter + ".json", json.dumps(sellersJSON))
+                f.save_file("data_sellers", "data_sellers_letter_" + letter + "_last.txt", str(pageNumber))  
                 
                 if(completed):
                     print(logId + "salvo " + str(len(sellersJSON)) + " urls de sellers da letra " + letter)
@@ -113,13 +113,9 @@ def getSellersData(letter):
     sellersJSON = f.read_file("data_sellers", "data_sellers_letter_" + letter + ".json")
     if(sellersJSON != False ):
         sellersJSON = json.loads(sellersJSON)
-    else: #se nao existe, carrega arquivo de URLs da etapa anterior
-        sellersJSON = f.read_file("url_sellers", "url_sellers_letter_" + letter + ".json")
-        if sellersJSON != False:
-            sellersJSON = json.loads(sellersJSON)
-        else:
-            print(logId + 'arquivo "url_sellers_letter_' + letter + '.json" não encontrado')
-            return False
+    else:
+        print(logId + 'arquivo "data_sellers_letter_' + letter + '.json" não encontrado')
+        return False
 
     #verifica se esse arquivo já não esta 100% coletado
     completed = True

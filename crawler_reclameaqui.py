@@ -26,15 +26,19 @@ def getReclameAquiData(letter):
 
     #verifica se esse arquivo já não esta 100% coletado
     completed = True
+    matchCount = 0
     for idx in range(len(sellersJSON)): 
         if("reclameAqui" not in sellersJSON[idx]):
             completed = False    
             break
+        elif("status" in sellersJSON[idx]["reclameAqui"]):
+            matchCount = matchCount + 1
     if completed:
-        print(logId + "carregado status dos sellers da 'Americanas', letra: " + letter)
+        print(logId + "carregado " + str(matchCount) + " status de sellers da 'Americanas', letra: " + letter)
         u.endline()
         return sellersJSON
     
+    matchCount = 0
     saveControl = 0
     for idx in range(len(sellersJSON)):
         if("reclameAqui" in sellersJSON[idx]):    
@@ -90,6 +94,7 @@ def getReclameAquiData(letter):
                         "reclameAqui": result
                     }) 
                     match = True
+                    matchCount = matchCount + 1
             
             # se não encontrado, inserimos o parametro mesmo que vazio, 
             # só para assim sabermos que ja tentamos este seller
@@ -113,6 +118,6 @@ def getReclameAquiData(letter):
             return False
 
     f.save_file("data_sellers", "data_sellers_letter_" + letter + ".json", json.dumps(sellersJSON))  
-    print(logId + "salvo dados dos sellers da letra " + letter)
+    print(logId + "salvo status de " + str(matchCount) + " sellers da letra " + letter)
     u.endline()
     return sellersJSON
