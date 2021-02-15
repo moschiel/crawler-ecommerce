@@ -1,21 +1,63 @@
 import utils as u
 import constants as c
-import lxml.html as parser
-import requests
+#import lxml.html as parser
+#import requests
+from selenium import webdriver 
 from time import sleep
 import file_manager as f
 import json
 import urllib
 
 logId = '[Google]:'
+    
+def getTest(letter):
+    letter = u.NumberToLetter(letter)
+    print (logId + "BUSCANDO SELLERS DA 'Americanas', LETRA: " + letter)
+    #verifica se existe arquivo
+    sellersJSON = f.read_file("data_sellers", "data_sellers_letter_" + letter + ".json")
+    if(sellersJSON != False ):
+        sellersJSON = json.loads(sellersJSON)
+    else:
+        print(logId + 'arquivo "data_sellers_letter_' + letter + '.json" não encontrado')
+        return False
+
+    #verifica se esse arquivo já não esta 100% coletado
+    completed = True
+    matchCount = 0
+    for idx in range(len(sellersJSON)): 
+        if("google" not in sellersJSON[idx]):
+            completed = False    
+            break
+        elif("rating" in sellersJSON[idx]["google"]):
+            matchCount = matchCount + 1
+    if completed:
+        print(logId + "carregado " + str(matchCount) + " status de sellers da 'Americanas', letra: " + letter)
+        u.endline()
+        return sellersJSON
+
+    driver = webdriver.Chrome(executable_path='./chromedriver88_linux64/chromedriver')
+
+    matchCount = 0
+    saveControl = 0
+    for idx in range(len(sellersJSON)):
+        if("google" in sellersJSON[idx]):    
+            # pula sellers ja coletados 
+            # print(str(idx) + "(skipped)")
+            continue
+
+        search_name = sellersJSON[idx]["americanas"]["name"]
+        search_name_url = urllib.parse.quote(search_name)
+        search_url = 'https://www.google.com/search?q=' + search_name_url
+        if(True): #try:
+            sleep(c.REQUEST_INTERVAL) #delay pra evitar detecção de requests massivos
+            driver.get(search_url)
+
 
 #estamos pesquisando no reclame aqui, usando os nomes de empresa da americanas
 #mas o idela serial usar os nomes/razão-social da receita federal
-
 def getGoogleData(letter):
     letter = u.NumberToLetter(letter)
     print (logId + "BUSCANDO SELLERS DA 'Americanas', LETRA: " + letter)
-
     #verifica se existe arquivo
     sellersJSON = f.read_file("data_sellers", "data_sellers_letter_" + letter + ".json")
     if(sellersJSON != False ):
@@ -49,7 +91,6 @@ def getGoogleData(letter):
         search_name = sellersJSON[idx]["americanas"]["name"]
         search_name_url = urllib.parse.quote(search_name)
         search_url = 'https://www.google.com/search?q=' + search_name_url
-        print(search_url)
         if(True): #try:
             while (True): #emula Do-While - enquanto status==202, repita
                 sleep(c.REQUEST_INTERVAL) #delay pra evitar detecção de requests massivos
