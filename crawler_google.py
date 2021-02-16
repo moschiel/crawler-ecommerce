@@ -1,8 +1,13 @@
 import utils as u
 import constants as c
+
 #import lxml.html as parser
 #import requests
-from selenium import webdriver 
+from selenium.webdriver import Chrome
+from selenium.webdriver.support.ui import WebDriverWait as webWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+
 from time import sleep
 import file_manager as f
 import json
@@ -10,7 +15,7 @@ import urllib
 
 logId = '[Google]:'
     
-def getTest(letter):
+def getGoogleData(letter):
     letter = u.NumberToLetter(letter)
     print (logId + "BUSCANDO SELLERS DA 'Americanas', LETRA: " + letter)
     #verifica se existe arquivo
@@ -35,10 +40,14 @@ def getTest(letter):
         u.endline()
         return sellersJSON
 
-    driver = webdriver.Chrome(executable_path='./chromedriver88_linux64/chromedriver')
+    driver = Chrome(executable_path='./chromedriver88__linux64/chromedriver')
 
     matchCount = 0
     saveControl = 0
+    nameSelector = "div.SPZz6b > h2 > span"
+    ratingSelector = "span.Aq14fc"
+    votesSelector = "span.hqzQac > span > a > span"
+
     for idx in range(len(sellersJSON)):
         if("google" in sellersJSON[idx]):    
             # pula sellers ja coletados 
@@ -48,14 +57,43 @@ def getTest(letter):
         search_name = sellersJSON[idx]["americanas"]["name"]
         search_name_url = urllib.parse.quote(search_name)
         search_url = 'https://www.google.com/search?q=' + search_name_url
-        if(True): #try:
-            sleep(c.REQUEST_INTERVAL) #delay pra evitar detecção de requests massivos
+        #if(True): 
+        try:
             driver.get(search_url)
+            sleep(4) #delay pra carregar elementos dinâmicos da pagina 
+            
+            if(len(driver.find_elements_by_css_selector(nameSelector)) == 0 or
+               len(driver.find_elements_by_css_selector(ratingSelector)) == 0 or
+               len(driver.find_elements_by_css_selector(votesSelector)) == 0):
+                print("continue")
+                continue
+
+            name = driver.find_element_by_css_selector(nameSelector).text
+            rating = driver.find_element_by_css_selector(ratingSelector).text
+            rating = float(rating.replace(",", "."))
+            votes = driver.find_element_by_css_selector(votesSelector).text
+            votes = votes.replace("comentário no Google", "")
+            votes = votes.replace("comentários no Google", "")
+            votes = int(votes)
+            print(idx, name, rating, votes)
+            #driver.close()
+            #return
+        #else: 
+        except:
+            print("ERRO")
+            driver.close()
+            return False
+
+    driver.close()
+        
+
+
+
 
 
 #estamos pesquisando no reclame aqui, usando os nomes de empresa da americanas
 #mas o idela serial usar os nomes/razão-social da receita federal
-def getGoogleData(letter):
+def blabla(letter):
     letter = u.NumberToLetter(letter)
     print (logId + "BUSCANDO SELLERS DA 'Americanas', LETRA: " + letter)
     #verifica se existe arquivo

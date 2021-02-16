@@ -11,8 +11,8 @@ def main():
     letter = 24
     if americanas.getSellersUrls(letter) != False:
         if americanas.getSellersData(letter) != False:
-            reclameaqui.getReclameAquiData(letter)
-            google.getTest(letter)
+            #reclameaqui.getReclameAquiData(letter)
+            google.getGoogleData(letter)
 
 if __name__ == '__main__':
     main()
