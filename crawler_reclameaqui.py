@@ -44,6 +44,8 @@ def getReclameAquiData(letter):
         if("reclameAqui" in sellersJSON[idx]):    
             # pula sellers ja coletados 
             # print(str(idx) + "(skipped)")
+            if("status" in sellersJSON[idx]["reclameAqui"]):
+                matchCount = matchCount + 1
             continue
 
         search_name = sellersJSON[idx]["americanas"]["name"]
@@ -72,20 +74,17 @@ def getReclameAquiData(letter):
             match = False
             if(len(resultJSON['companies']) > 0):
                 search = sellersJSON[idx]["americanas"]
-                search["name"] = search["name"].lower()
                 shortname = search["url"][38:]
 
                 #pegamos apenas o primeiro resultado da busca
                 result = resultJSON["companies"][0]
-                result["companyName"] = result["companyName"].lower()
-                result["fantasyName"] = result["fantasyName"].lower()
 
                 #comparamos resultados
                 #OBS: daria pra entrar na pagina do primeiro resultado, e pegar CNPJ de la
                 #     mas seria um resquest a mais, vamos comparar só o nome mesmo
-                if( search["name"] == result["companyName"] or 
-                    search["name"] == result["fantasyName"] or
-                    shortname == result["shortname"]
+                if( u.compareAlphanumeric( search["name"], result["companyName"] ) or 
+                    u.compareAlphanumeric( search["name"], result["fantasyName"] ) or
+                    u.compareAlphanumeric( shortname, result["shortname"] )
                     ):
                     #insere url no JSON
                     result.update({"url":'https://www.reclameaqui.com.br/empresa/'+result["shortname"]})
