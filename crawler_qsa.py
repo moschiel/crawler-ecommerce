@@ -25,7 +25,7 @@ def getSellersQsa(letter):
         if("qsa" not in sellersJSON[idx]):
             completed = False    
             break
-        elif("cnph" in sellersJSON[idx]["qsa"]):
+        elif("cnpj" in sellersJSON[idx]["qsa"]):
             matchCount = matchCount + 1
     if completed:
         print(logId + "carregado " + str(matchCount) + " QSA de sellers da 'Americanas', letra: " + letter)
