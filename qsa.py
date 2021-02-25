@@ -72,6 +72,8 @@ def convertToNum(text):
         return int(text)
     return ""
 
+def close():
+    QSAconn.close()
 
 def get_QSA_JSON(cnpj):
     if(not QSAconn.isConnected()):
@@ -114,6 +116,6 @@ def get_QSA_JSON(cnpj):
     return None
 
 
-res = get_QSA_JSON('01888722000197')
-print(res)
-QSAconn.close()
+#res = get_QSA_JSON('01888722000197')
+#print(res)
+#QSAconn.close()

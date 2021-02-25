@@ -3,14 +3,16 @@
 import crawler_americanas as americanas
 import crawler_reclameaqui as reclameaqui
 import crawler_google as google
+import crawler_qsa as QSA
 
 
 def main():
     letter = 24
     if americanas.getSellersUrls(letter) != False:
         if americanas.getSellersData(letter) != False:
-            reclameaqui.getReclameAquiData(letter)
-            google.getGoogleData(letter)
+            QSA.getSellersQsa(letter)
+            #reclameaqui.getReclameAquiData(letter)
+            #google.getGoogleData(letter)
 
 if __name__ == '__main__':
     main()

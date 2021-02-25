@@ -49,8 +49,8 @@ def getReclameAquiData(letter):
             continue
 
         search_name = sellersJSON[idx]["americanas"]["name"]
-        search_name = urllib.parse.quote(search_name)
-        search_url = 'https://iosearch.reclameaqui.com.br/raichu-io-site-search-v1/companies/search/' + search_name
+        search_name_url = urllib.parse.quote(search_name)
+        search_url = 'https://iosearch.reclameaqui.com.br/raichu-io-site-search-v1/companies/search/' + search_name_url
         
         try:
             while (True): #emula Do-While - enquanto status==202, repita
@@ -75,6 +75,10 @@ def getReclameAquiData(letter):
             if(len(resultJSON['companies']) > 0):
                 search = sellersJSON[idx]["americanas"]
                 shortname = search["url"][38:]
+                searchQSA = ""
+                if('qsa' in sellersJSON[idx]):
+                    if ('cnpj' in sellersJSON[idx]['qsa']):
+                        searchQSA = sellersJSON[idx]['qsa']
 
                 #pegamos apenas o primeiro resultado da busca
                 result = resultJSON["companies"][0]
@@ -102,7 +106,7 @@ def getReclameAquiData(letter):
                     "reclameAqui": {}
                 }) 
 
-            print(str(idx) + ', match:' + str(match) + ', ' +sellersJSON[idx]['americanas']['name'])
+            print(str(idx) + ', match:' + str(match) + ', ' + search_name)
             
             # a cada X paginas ou se acabar os sellers, salvamos o arquivo
             saveControl = saveControl + 1
@@ -112,7 +116,7 @@ def getReclameAquiData(letter):
                 f.save_file("data_sellers", "data_sellers_letter_" + letter + ".json", json.dumps(sellersJSON))  
   
         except:
-            print(logId + "ERRO NO INDEX: " + str(idx) + ", SELLER: " + sellersJSON[idx]['americanas']['name'])
+            print(logId + "ERRO NO INDEX: " + str(idx) + ", SELLER: " + search_name)
             u.endline()
             return False
 
