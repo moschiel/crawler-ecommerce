@@ -49,12 +49,13 @@ def getSellersQsa(letter):
             match = False
             qsaJson = qsa.get_QSA_JSON(search_cnpj)
             if(qsaJson == None):
-                print(logId + "ERRO NA LEITURA DO SELLER: " + search_name + " , CNPJ: " + search_cnpj)
+                print(logId + "NÃO ENCONTRADO SELLER: " + search_name + " , CNPJ: " + search_cnpj)
                 sellersJSON[idx].update({
                     "qsa": {}
                 })
-                qsa.close()
-                return False
+                continue
+                #qsa.close()
+                #return False
             else:
                 match = True
                 matchCount = matchCount + 1
