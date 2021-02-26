@@ -32,7 +32,7 @@ def GET_SITUACAO(codigo):
     elif codigo == "03": return "03-SUSPENSA"
     elif codigo == "04": return "04-INAPTA"
     elif codigo == "05": return "05-BAIXADA"
-    else return "??"
+    else: return codigo
 
 def GET_MOTIVO_SITUACAO(codigo):
     if codigo == "01": return "01-EXTINÇÃO POR ENCERRAMENTO LIQUIDAÇÃO VOLUNTÁRIA"
@@ -103,7 +103,7 @@ def GET_MOTIVO_SITUACAO(codigo):
     elif codigo == "73": return "73-OMISSÃO CONTUMAZ"
     elif codigo == "74": return "74-INCONSISTÊNCIA CADASTRAL"
     elif codigo == "80": return "80-BAIXA REGISTRADA NA JUNTA, INDEFERIDA NA RFB"
-    else return "??"
+    else: return codigo
 
 class QsaDB:
     connection = None
@@ -161,7 +161,7 @@ def get_QSA_JSON(cnpj):
     for table in QSAconn.tables:
         if(table == "empresas"): #codigo temporario
             continue
-        QSAconn.cursor.execute("SELECT * FROM {} WHERE cnpj='{}' LIMIT ".format(table, cnpj))
+        QSAconn.cursor.execute("SELECT * FROM {} WHERE cnpj='{}' LIMIT 1".format(table, cnpj))
         queryResult = QSAconn.cursor.fetchone()
         if(queryResult != None):
             return {
