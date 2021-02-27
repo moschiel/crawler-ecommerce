@@ -15,7 +15,7 @@ def save_file(directory, fileName, txtData):
     try:
         createFolder(directory)
         filePath = os.path.join(os.getcwd(), "files", directory, fileName) 
-        with open(filePath, 'w') as output:
+        with open(filePath, 'w', encoding='utf8') as output:
             output.write(txtData) 
         output.close()  
     except:

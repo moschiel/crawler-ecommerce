@@ -47,7 +47,8 @@ def getGoogleData(letter):
     nameSelector = "div.SPZz6b > h2 > span"
     ratingSelector = "span.Aq14fc"
     votesSelector = "span.hqzQac > span > a > span"
-
+    phoneSelector = "span.LrzXr.zdqRlf.kno-fv > a > span"
+    
     for idx in range(len(sellersJSON)):
         if("google" in sellersJSON[idx]):    
             # pula sellers ja coletados 
@@ -60,31 +61,44 @@ def getGoogleData(letter):
         search_name_url = urllib.parse.quote(search_name)
         search_url = 'https://www.google.com/search?q=' + search_name_url
 
-        try:
+        #try:
+        if True:
             driver.get(search_url)
             sleep(4) #delay pra carregar elementos dinâmicos da pagina 
             
             namesArray = driver.find_elements_by_css_selector(nameSelector)
             ratingsArray = driver.find_elements_by_css_selector(ratingSelector)
             votesArray = driver.find_elements_by_css_selector(votesSelector)
+            phoneArray = driver.find_elements_by_css_selector(phoneSelector)
 
             match = False
 
-            if(len(namesArray) > 0 and len(ratingsArray) > 0 and len(ratingSelector) > 0
-                and u.compareAlphanumeric(namesArray[0].text, search_name)):
+            if( len(namesArray) > 0 and (len(ratingsArray) > 0 or len(phoneArray) > 0)
+                and ( c.IGNORE_GOOGLE_NAME_MATCH or u.compareAlphanumeric(namesArray[0].text, search_name)) ):
+
+                name = ""
+                rating = ""
+                votes = ""
+                phone = ""
                 
-                name = driver.find_element_by_css_selector(nameSelector).text
-                rating = driver.find_element_by_css_selector(ratingSelector).text
-                rating = float(rating.replace(",", "."))
-                votes = driver.find_element_by_css_selector(votesSelector).text
-                votes = votes.replace("comentário no Google", "")
-                votes = votes.replace("comentários no Google", "")
-                votes = int(votes)
+                if(len(namesArray) > 0):
+                    name = namesArray[0].text
+                if(len(ratingsArray) > 0):
+                    rating = ratingsArray[0].text
+                    rating = float(rating.replace(",", "."))
+                if(len(votesArray) > 0):
+                    votes = votesArray[0].text
+                    votes = votes.replace("comentário no Google", "")
+                    votes = votes.replace("comentários no Google", "")
+                    votes = int(votes)
+                if(len(phoneArray) > 0):
+                    phone = phoneArray[0].text
                 
                 sellersJSON[idx].update({
                     "google": {
                         "rating": rating,
-                        "votes": votes
+                        "votes": votes,
+                        "phone": phone
                     }
                 }) 
 
@@ -108,7 +122,8 @@ def getGoogleData(letter):
                 saveControl = 0
                 f.save_file("data_sellers", "data_sellers_letter_" + letter + ".json", json.dumps(sellersJSON))  
 
-        except:
+        #except:
+        else:
             driver.close()
             print(logId + "ERRO NO INDEX: " + str(idx) + ", SELLER: " + search_name)
             u.endline()

@@ -11,8 +11,8 @@ def main():
     if americanas.getSellersUrls(letter) != False:
         if americanas.getSellersData(letter) != False:
             QSA.getSellersQsa(letter)
-            #reclameaqui.getReclameAquiData(letter)
-            #google.getGoogleData(letter)
+            reclameaqui.getReclameAquiData(letter)
+            google.getGoogleData(letter)
 
 if __name__ == '__main__':
     main()
