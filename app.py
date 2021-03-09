@@ -7,7 +7,7 @@ import crawler_qsa as QSA
 
 
 def main():
-    letter = 24
+    letter = 24 #indice da letra no alfabeto
     if americanas.getSellersUrls(letter) != False:
         if americanas.getSellersData(letter) != False:
             QSA.getSellersQsa(letter)
@@ -21,4 +21,6 @@ if __name__ == '__main__':
 #python3 -m pip install UMA_LIB_QUALQUER
 #sudo /opt/lampp/manager-linux-x64.run
 #sudo /etc/init.d/apache2 stop
-#ssh rogerm@10.181.194.159
+
+
+

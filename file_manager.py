@@ -1,4 +1,5 @@
 import os
+import csv
 
 def createFolder(directory):
     try:
@@ -26,3 +27,16 @@ def read_file(directory, fileName):
     if(os.path.exists(filePath)):
         return open(filePath, "r").read()
     return False
+
+def save_csv_file(directory, fileName, csvData):
+    # a - will append to the end of the file
+    # w - will overwrite any existing content
+    try:
+        createFolder(directory)
+        filePath = os.path.join(os.getcwd(), "files", directory, fileName) 
+        with open(filePath, 'w', encoding='utf8') as output:
+            writer = csv.writer(output)
+            writer.writerows(csvData) 
+        output.close()  
+    except:
+        print("ERROR SAVING FILE: " + fileName)
