@@ -1,65 +1,12 @@
 import file_manager as f
 import utils as u
 import json
+import constants as c
 
-merged_seller = ['AMERICANAS','','','','','']
 colunas_seller = ['cnpj','lojista','nota','votos','produtos','link']
-
-#os nomes dessa coluna devem ser igual do json
-colunas_categoria = [
-    "acabamentos para pisos e revestimentos",
-    "acessórios para monitores cardíacos",
-    "adesivos, fitas e colas",
-    "agro, indústria e comércio",
-    "alimentos",
-    "ar-condicionado e aquecedores",
-    "artesanato",
-    "artigos de festas",
-    "automotivo",
-    "balaustre de madeira",
-    "bebidas",
-    "bebês",
-    "beleza e perfumaria",
-    "brinquedos",
-    "caibro de madeira",
-    "cal",
-    "calhas",
-    "cama, mesa e banho",
-    "capacetes",
-    "casa e construção",
-    "celulares e smartphones",
-    "cerâmica hidráulica",
-    "construção",
-    "corante",
-    "corrimão de madeira",
-    "cronômetros e pedômetros",
-    "câmeras e filmadoras",
-    "decoração",
-    "dicionários",
-    "eletrodomésticos",
-    "eletroportáteis",
-    "enfeites de natal",
-    "esporte e lazer",
-    "ferros e aços",
-    "filmes e séries",
-    "flores",
-    "food delivery",
-    "forro",
-    "games",
-    "gesso",
-    "gift card",
-    "informática",
-    "informática e acessórios",
-    "instrumentos musicais",
-    "isolantes",
-    "ladrilhos de vidro",
-    "ladrilhos hidráulicos",
-    "livros"
-]
-
+colunas_categoria = []
 colunas_google = ['notas', 'votos', 'contato']
 colunas_reclame_aqui = ['notas', 'votos']
-
 colunas_qsa = [
     #"cnpj",
     "razao_social",
@@ -89,7 +36,40 @@ colunas_qsa = [
 ]
 
 logId = "[CSV]: "
+
+def updateCategoriesList():
+    print (logId + "ATUALIZANDO CATEGORIAS: ")
+    AllCategories = []
+    global colunas_categoria
+
+    for letter in range(c.MAX_LETTER):
+        letter = u.NumberToLetter(letter)
+
+        #verifica se existe arquivo
+        sellersJSON = f.read_file("data_sellers", "data_sellers_letter_" + letter + ".json")
+        if(sellersJSON != False ):
+            sellersJSON = json.loads(sellersJSON)
+        else:
+            print(logId + 'arquivo "data_sellers_letter_' + letter + '.json" não encontrado')
+            continue
+        
+        for seller in sellersJSON:
+            if('categories' in seller['americanas']):
+                sellerCategories = seller['americanas']['categories']
+                for category in sellerCategories:
+                    if(category['name'] not in AllCategories):
+                        AllCategories.append(category['name'])
+        AllCategories.sort()
+        f.save_file("categories", "categories.txt", json.dumps(AllCategories)) 
+     
+        colunas_categoria = AllCategories
+        
+    print (logId + "Carregado " + str(len(AllCategories)) + ' categorias')
+        
+
+
 def convertToCsv(letter):
+    global colunas_categoria
     letter = u.NumberToLetter(letter)
     print (logId + "GERANDO CSV DE SELLERS DA 'Americanas', LETRA: " + letter)
 
@@ -101,27 +81,29 @@ def convertToCsv(letter):
         print(logId + 'arquivo "data_sellers_letter_' + letter + '.json" não encontrado')
         return False
 
+    #monta celulas 'mergeadas' da AMERICANAS
+    merged_seller = []
+    for col in colunas_seller:
+        merged_seller.append('')
+    merged_seller[0] = 'AMERICANAS'
+    #monta celulas 'mergeadas' das CATEGORIAS
+    merged_categoria = []
+    for col in colunas_categoria:
+        merged_categoria.append('')
+    merged_categoria[0] = 'CATEGORIAS'
+
     #monta colunas header
     csvData = []
-    csvData.append( merged_seller )
-    #csvData[0] += merged_categoria
-    #csvData[0] += merged_google
-    #csvData[0] += merged_reclame_aqui
-    #csvData[0] += merged_qsa
-    csvData.append(colunas_seller)
-    #csvData[0] += colunas_categoria
-    #csvData[0] += colunas_google
-    #csvData[0] += colunas_reclame_aqui
-    #csvData[0] += colunas_qsa
+    csvData.append( merged_seller + merged_categoria)
+    csvData.append(colunas_seller + colunas_categoria)
 
     for seller in sellersJSON:
-        csvData.append( sellerToCsv(seller) )
+        csvData.append( sellerToCsv(seller) + categoriesToCsv(seller) )
     
     f.save_csv_file('csv_sellers', 'sellers_' + letter + '.csv', csvData)
 
 def sellerToCsv(sellerJson):
     sellerEcomm = sellerJson['americanas']
-    
     sellerCSV = []
     sellerCSV.append( sellerEcomm['cnpj'] ) #coluna cnpj
     sellerCSV.append( sellerEcomm['name'] ) #coluna lojista
@@ -130,11 +112,24 @@ def sellerToCsv(sellerJson):
     sellerCSV.append( str(sellerEcomm['products']) ) #coluna produtos 
     sellerCSV.append( sellerEcomm['url'] ) #coluna link
 
-    #categoriesEcomm = sellerEcomm['categories']
-    #for idx in range(len(colunas_categoria)):
-
     return sellerCSV
 
+def categoriesToCsv(sellerJson):
+    global colunas_categoria
+    #inicializa array
+    categoriasCSV = [''] * len(colunas_categoria)
+
+    sellerCategorias = sellerJson['americanas']['categories']
+    for categoria in sellerCategorias:
+        if(categoria['name'] in colunas_categoria):
+            idx = colunas_categoria.index(categoria['name'])
+            categoriasCSV[idx] = categoria['count']
+        else:
+            print(logId + "Error, não encontrado categoria '" + categoria['name'] + "'")
+
+    return categoriasCSV
 
 
-convertToCsv(24)
+if __name__ == '__main__':
+    updateCategoriesList()
+    convertToCsv(24)

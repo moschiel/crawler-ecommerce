@@ -4,14 +4,16 @@ def OPC_MEI(codigo):
     if codigo == "S": text = "SIM"
     elif codigo == "N": text = "NAO"
     else:  text = codigo
-    return u.removeAccentuation(text)
+    #return u.removeAccentuation(text)
+    return text
 
 def OPC_SIMPLES(codigo):
     if codigo == "0" or codigo == "":  text = "NAO OPTANTE"
     elif codigo == "5" or codigo == "7":  text = "OPTANTE"
     elif codigo == "6" or codigo == "8":  text = "EXCLUIDO"
     else:  text = codigo
-    return u.removeAccentuation(text)
+    #return u.removeAccentuation(text)
+    return text
 
 def PORTE(codigo):
     if codigo == "00":  text = "00-NAO INFORMADO"
@@ -19,7 +21,8 @@ def PORTE(codigo):
     elif codigo == "03":  text = "03-EMPRESA DE PEQUENO PORTE"
     elif codigo == "05":  text = "05-DEMAIS"
     else:  text = codigo
-    return u.removeAccentuation(text)
+    #return u.removeAccentuation(text)
+    return text
 
 def SITUACAO(codigo):
     if codigo == "01":  text = "01-NULA"
@@ -28,7 +31,8 @@ def SITUACAO(codigo):
     elif codigo == "04":  text = "04-INAPTA"
     elif codigo == "08":  text = "08-BAIXADA"
     else:  text = codigo
-    return u.removeAccentuation(text)
+    #return u.removeAccentuation(text)
+    return text
 
 def MOTIVO_SITUACAO(codigo):
     if codigo == "01":  text = "01-EXTINÇÃO POR ENCERRAMENTO LIQUIDAÇÃO VOLUNTÁRIA"
@@ -100,7 +104,8 @@ def MOTIVO_SITUACAO(codigo):
     elif codigo == "74":  text = "74-INCONSISTÊNCIA CADASTRAL"
     elif codigo == "80":  text = "80-BAIXA REGISTRADA NA JUNTA, INDEFERIDA NA RFB"
     else:  text = codigo
-    return u.removeAccentuation(text)
+    #return u.removeAccentuation(text)
+    return text
 
 def NATUREZA_JURIDICA(codigo):
     #1. Administração Pública
@@ -198,7 +203,8 @@ def NATUREZA_JURIDICA(codigo):
     elif codigo == "5029":  text = "502-9 - Representação Diplomática Estrangeira"
     elif codigo == "5037":  text = "503-7 - Outras Instituições Extraterritoriais"
     else:  text = codigo
-    return u.removeAccentuation(text)
+    #return u.removeAccentuation(text)
+    return text
 
 def CNAE(codigo):
     if codigo == "0111301":  text = "0111-3/01 - Cultivo de arroz"
@@ -1425,4 +1431,5 @@ def CNAE(codigo):
     elif codigo == "9700500":  text = "9700-5/00 - Serviços domésticos"
     elif codigo == "9900800":  text = "9900-8/00 - Organismos internacionais e outras instituições extraterritoriais"
     else:  text = codigo
-    return u.removeAccentuation(text)
+    #return u.removeAccentuation(text)
+    return text
