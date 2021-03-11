@@ -1,4 +1,5 @@
 MAX_LETTER = 27
+MAX_COLETAS = 12
 #Debug prints
 PRINT_ABA_URL = True
 PRINT_PAGE_URL = False

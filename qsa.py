@@ -86,7 +86,7 @@ def get_QSA_JSON(cnpj):
         if(queryResult != None):
             return {
                 "qsa": {
-                    "cnpj": queryResult[EnumQSA.cnpj],
+                    #"cnpj": queryResult[EnumQSA.cnpj],
                     "razao_social": queryResult[EnumQSA.razao_social],
                     "nome_fantasia": queryResult[EnumQSA.nome_fantasia],
                     "situacao": codes.SITUACAO(queryResult[EnumQSA.situacao]),

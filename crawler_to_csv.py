@@ -82,23 +82,28 @@ def convertToCsv(letter):
         return False
 
     #monta celulas 'mergeadas' da AMERICANAS
-    merged_seller = []
-    for col in colunas_seller:
-        merged_seller.append('')
+    merged_seller = [''] * len(colunas_seller)
     merged_seller[0] = 'AMERICANAS'
+    #monta celulas 'mergeadas' do ReclameAqui
+    merged_reclame_aqui = [''] * len(colunas_reclame_aqui)
+    merged_reclame_aqui[0] = 'RECLAME AQUI'
+    #monta celulas 'mergeadas' do google
+    merged_google = [''] * len(colunas_google)
+    merged_google[0] = 'GOOGLE REVIEW'
+    #monta celulas 'mergeadas' da Receita Federal QSA
+    merged_qsa = [''] * len(colunas_qsa)
+    merged_qsa[0] = 'RECEITA FEDERAL (QSA)'
     #monta celulas 'mergeadas' das CATEGORIAS
-    merged_categoria = []
-    for col in colunas_categoria:
-        merged_categoria.append('')
+    merged_categoria = [''] * len(colunas_categoria)
     merged_categoria[0] = 'CATEGORIAS'
 
     #monta colunas header
     csvData = []
-    csvData.append( merged_seller + merged_categoria)
-    csvData.append(colunas_seller + colunas_categoria)
+    csvData.append( merged_seller + merged_reclame_aqui + merged_google + merged_qsa + merged_categoria)
+    csvData.append(colunas_seller + colunas_reclame_aqui + colunas_google + colunas_qsa + colunas_categoria)
 
     for seller in sellersJSON:
-        csvData.append( sellerToCsv(seller) + categoriesToCsv(seller) )
+        csvData.append( sellerToCsv(seller) + reclameAquiToCsv(seller) + googleToCsv(seller) + qsaToCsv(seller) + categoriesToCsv(seller) )
     
     f.save_csv_file('csv_sellers', 'sellers_' + letter + '.csv', csvData)
 
@@ -111,7 +116,6 @@ def sellerToCsv(sellerJson):
     sellerCSV.append( str(sellerEcomm['votes']) ) #coluna votos
     sellerCSV.append( str(sellerEcomm['products']) ) #coluna produtos 
     sellerCSV.append( sellerEcomm['url'] ) #coluna link
-
     return sellerCSV
 
 def categoriesToCsv(sellerJson):
@@ -126,9 +130,47 @@ def categoriesToCsv(sellerJson):
             categoriasCSV[idx] = categoria['count']
         else:
             print(logId + "Error, não encontrado categoria '" + categoria['name'] + "'")
-
+    
     return categoriasCSV
 
+def reclameAquiToCsv(sellerJson):
+    sellerReclameAqui = sellerJson['reclameAqui']
+    reclameAquiCSV = []
+    if('rating' in sellerReclameAqui):
+        reclameAquiCSV.append( sellerReclameAqui['rating'] ) #coluna notas
+    else:
+        reclameAquiCSV.append("")
+    if('votes' in sellerReclameAqui):
+        reclameAquiCSV.append( sellerReclameAqui['votes'] ) #coluna votos
+    else:
+        reclameAquiCSV.append("")
+    
+    return reclameAquiCSV
+
+def googleToCsv(sellerJson):
+    sellerGoogle = sellerJson['google']
+    sellerGoogleCSV = []
+    if('rating' in sellerGoogle):
+        sellerGoogleCSV.append( sellerGoogle['rating'] ) #coluna notas
+    else:
+        sellerGoogleCSV.append("")
+    if('votes' in sellerGoogle):
+        sellerGoogleCSV.append( sellerGoogle['votes'] ) #coluna votos
+    else:
+        sellerGoogleCSV.append("")
+    if('phone' in sellerGoogle):
+        sellerGoogleCSV.append( sellerGoogle['phone'] ) #coluna contato
+    else:
+        sellerGoogleCSV.append("")
+    
+    return sellerGoogleCSV
+
+def qsaToCsv(sellerJson):
+    sellerQsa = sellerJson['qsa']
+    qsaCSV = []
+    for attr, value in sellerQsa.items():
+        qsaCSV.append( value.replace(';',','))  # ponte e virgula da bug no csv, então tiramos
+    return qsaCSV
 
 if __name__ == '__main__':
     updateCategoriesList()
